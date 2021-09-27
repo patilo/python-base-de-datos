@@ -1,0 +1,36 @@
+import psycopg2 as bd. #le asignamos un nuevo nombre al conector de postgres y hacemos uso de el abajo
+
+
+#creamos la variable q nos conecta a postgres con los datos de localhost y que le asignamos
+conexion = bd.connect(user='postgres',password='admin',host='127.0.0.1',port='5432',database='test_db')
+
+
+
+#como podemos ver, ya no usamos el why(ya que nos hacia ingreso de datos si o si sin necesidad de usa el commit
+#por ende no hacia un rollback(no ingresa datos si hay un error)
+#asi que esta ves usamos commit para ingresar los datos y en la excepcion, en caso q exista error indique cual es
+#para resolverlo, puede ser que este mal escrito el Query o una linea
+#conexion.autocommit = false *inicia la transaccion y conexion.commit() finaliza la transaccion
+try:
+    
+    conexion.autocommit = False  #(esta no es buena practica, es lo mismo que conexion.commit() pero es mejor no usarla
+    cursor = conexion.cursor() #abrimos la conexion
+    
+    #primera transaccion
+    sentencia = 'INSERT INTO persona(nombre, apellido, email) VALUES(%s, %s, %s)' #creamos las querys que utilizaremos, en este caso insertar
+    valores = ('Maria', 'Esparza', 'mesparza@mail.com') #asignamos los valores de VALUES
+    cursor.execute(sentencia, valores) #ejecutamos el cursor con las variables sentencia(query insert) y valores(query VALUES)
+    
+    #segunda transaccion
+    sentencia = 'UPDATE persona SET nombre=%s, apellido=%s, email=%s WHERE id_persona=%s'
+    valores = ('Juan Carlos', 'Juarez','jcjuarez@mail.com', 1)
+    cursor.execute(sentencia, valores)
+    
+    conexion.commit()
+    print('Termina la transacción')
+    
+except Exception as e:
+    conexion.rollback() #si existe una excepcion o error en la conexional ingresar las querys nos informara el error
+    print(f'Ocurrió un error, se hizo rollback: {e}')
+finally:
+    conexion.close()
